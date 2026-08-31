@@ -49,6 +49,23 @@
         }
 
         .hidden { display: none !important; }
+        .readonly-user input,
+        .readonly-user select,
+        .readonly-user button {
+            pointer-events: none;
+        }
+
+        .readonly-user input,
+        .readonly-user select {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .readonly-user button {
+            opacity: 0.6;
+        }
+
 
         .form-group {
             margin-bottom: 15px;
@@ -140,6 +157,12 @@
         .table-responsive {
             overflow-x: auto;
             margin-top: 15px;
+        }
+
+        #programme-table th,
+        #programme-table td {
+            white-space: nowrap;
+            vertical-align: middle;
         }
 
         table {
@@ -505,12 +528,13 @@
                 <table id="programme-table">
                     <thead>
                         <tr>
+                            <th>PDC</th>
+                            <th>Modify PDC Date</th>
                             <th>Coach No</th>
                             <th>Railway</th>
                             <th>Type</th>
-                            <th>PDC Date</th>
-                            <th>Modify PDC</th>
-                            <th>Action</th>
+                            <th>Corrosion Shop</th>
+                            <th>Furnishing Shop</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -684,12 +708,22 @@
 
     // Screen Routing & Navigation
     const showActivity = (actId) => {
+        if (currentUserRole === 'User' &&
+            !['programme', 'holding'].includes(actId)) {
+            actId = 'programme';
+        }
+
         document.querySelectorAll('.activity-section').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.nav-card').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(`act-${actId}`).classList.remove('hidden');
-        document.querySelector(`.nav-card[data-activity="${actId}"]`).classList.add('active');
-        
+
+        const activityEl = document.getElementById(`act-${actId}`);
+        const navEl = document.querySelector(`.nav-card[data-activity="${actId}"]`);
+
+        if (!activityEl || !navEl || navEl.style.display === 'none') return;
+
+        activityEl.classList.remove('hidden');
+        navEl.classList.add('active');
+
         if (actId === 'holding') {
             loadHoldingDropdowns();
         }
@@ -700,24 +734,90 @@
     });
 
     // Authentication Setup
+    let currentUserRole = null;
+
+    const applyRoleAccess = (role) => {
+        currentUserRole = role;
+
+        document.querySelectorAll('.nav-card').forEach(card => {
+            const activity = card.dataset.activity;
+            const allowed = role === 'Admin' ||
+                            activity === 'programme' ||
+                            activity === 'holding';
+
+            card.style.display = allowed ? '' : 'none';
+            card.classList.remove('active');
+        });
+
+        // User has VIEW-ONLY access to Programme and Holding.
+        // Admin retains full editable access.
+        document.getElementById('app-view').classList.toggle(
+            'readonly-user',
+            role === 'User'
+        );
+
+
+        if (role === 'User') {
+            document.querySelectorAll(
+                '#act-programme input, #act-programme button, #act-holding input, #act-holding button'
+            ).forEach(el => {
+                // Keep filter/search/report controls usable, but block actual data editing.
+                const id = el.id || '';
+                const isProgrammeFilter =
+                    id === 'prog-from' || id === 'prog-to' || id === 'prog-filter-btn';
+                const isHoldingFilter =
+                    id === 'holding-generate-btn' || id === 'holding-refresh-options' ||
+                    el.classList.contains('dropdown-search-input') ||
+                    el.classList.contains('select-all') ||
+                    el.classList.contains('option-item');
+
+                if (!isProgrammeFilter && !isHoldingFilter) {
+                    if (el.matches('input[type="date"]') ||
+                        el.classList.contains('save-pdc-btn') ||
+                        el.classList.contains('save-holding-dates-btn')) {
+                        el.disabled = true;
+                    }
+                }
+            });
+        }
+
+        showActivity(role === 'Admin' ? 'inturn' : 'programme');
+    };
+
     document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
+
         const user = document.getElementById('username').value.trim();
         const pass = document.getElementById('password').value.trim();
 
+        let role = null;
+
         if (user === 'Admin' && pass === 'Admin') {
+            role = 'Admin';
+        } else if (user === 'User' && pass === 'User') {
+            role = 'User';
+        }
+
+        if (role) {
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('app-view').classList.remove('hidden');
             document.getElementById('login-error').style.display = 'none';
+            applyRoleAccess(role);
         } else {
             document.getElementById('login-error').style.display = 'block';
         }
     });
 
     document.getElementById('logout-btn').addEventListener('click', () => {
+        currentUserRole = null;
         document.getElementById('app-view').classList.add('hidden');
         document.getElementById('login-view').classList.remove('hidden');
         document.getElementById('login-form').reset();
+
+        document.querySelectorAll('.nav-card').forEach(card => {
+            card.style.display = '';
+            card.classList.remove('active');
+        });
     });
 
     // Form Input Validations
@@ -856,40 +956,75 @@
         try {
             const q = query(collection(db, "coaches"), where("pdc", ">=", from), where("pdc", "<=", to));
             const querySnapshot = await getDocs(q);
+            tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+
+        try {
+            const q = query(
+                collection(db, "coaches"),
+                where("pdc", ">=", from),
+                where("pdc", "<=", to)
+            );
+            const querySnapshot = await getDocs(q);
             tbody.innerHTML = '';
 
             if (querySnapshot.empty) {
-                tbody.innerHTML = '<tr><td colspan="6">No coaches programmed for selected date range.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">No coaches programmed for selected date range.</td></tr>';
                 return;
             }
 
             querySnapshot.forEach((docSnap) => {
                 const coach = docSnap.data();
+                const coachNo = coach.coachNumber;
                 const tr = document.createElement('tr');
+
                 tr.innerHTML = `
-                    <td>${coach.coachNumber}</td>
+                    <td id="pdc-display-${coachNo}">${formatDateToDMY(coach.pdc)}</td>
+                    <td>
+                        <input type="date" value="${coach.pdc || ''}"
+                               class="pdc-update-input" id="pdc-input-${coachNo}">
+                        <button class="btn btn-green save-pdc-btn"
+                                data-coach="${coachNo}"
+                                style="padding:4px 8px; font-size:12px; margin-left:4px;">Save</button>
+                    </td>
+                    <td>${coachNo}</td>
                     <td>${coach.railway || ''}</td>
                     <td>${coach.coachType || ''}</td>
-                    <td id="pdc-display-${coach.coachNumber}">${formatDateToDMY(coach.pdc)}</td>
-                    <td>
-                        <input type="date" value="${coach.pdc || ''}" class="pdc-update-input" id="pdc-input-${coach.coachNumber}">
-                    </td>
-                    <td>
-                        <button class="btn btn-green save-pdc-btn" data-coach="${coach.coachNumber}" style="padding:4px 8px; font-size:12px;">Save</button>
-                    </td>
+                    <td>${coach.corrosionShop || ''}</td>
+                    <td>${coach.furnishingShop || ''}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
+            if (currentUserRole === 'User') {
+                document.querySelectorAll('.pdc-update-input').forEach(input => {
+                    input.disabled = true;
+                    input.title = 'View-only access';
+                });
+                document.querySelectorAll('.save-pdc-btn').forEach(btn => {
+                    btn.disabled = true;
+                    btn.title = 'View-only access';
+                });
+            }
+
             document.querySelectorAll('.save-pdc-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
+                    if (currentUserRole !== 'Admin') {
+                        alert('View-only access: User cannot modify PDC dates.');
+                        return;
+                    }
+
                     const coachNo = e.target.dataset.coach;
                     const newPdc = document.getElementById(`pdc-input-${coachNo}`).value;
-                    if (!newPdc) return;
+
+                    if (!newPdc) {
+                        alert('Please select a valid PDC date.');
+                        return;
+                    }
 
                     try {
                         await updateDoc(doc(db, "coaches", coachNo), { pdc: newPdc });
-                        document.getElementById(`pdc-display-${coachNo}`).innerText = formatDateToDMY(newPdc);
+                        document.getElementById(`pdc-display-${coachNo}`).innerText =
+                            formatDateToDMY(newPdc);
                         alert(`PDC updated for Coach ${coachNo}`);
                     } catch (err) {
                         alert(`Failed to update PDC: ${err.message}`);
@@ -899,10 +1034,8 @@
 
         } catch (error) {
             console.error("Error filtering programme: ", error);
-            tbody.innerHTML = '<tr><td colspan="6">Error fetching data.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7">Error fetching data.</td></tr>';
         }
-    });
-
     // Activities 4, 5, 6: Generic Fetch & Workflow Execution
     document.querySelectorAll('.fetch-generic-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -1211,9 +1344,25 @@
             tbody.appendChild(tr);
         });
 
+        if (currentUserRole === 'User') {
+            document.querySelectorAll('.table-date-input').forEach(input => {
+                input.disabled = true;
+                input.title = 'View-only access';
+            });
+            document.querySelectorAll('.save-holding-dates-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.title = 'View-only access';
+            });
+        }
+
         // Add Event Listener to Save Buttons
         document.querySelectorAll('.save-holding-dates-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                if (currentUserRole !== 'Admin') {
+                    alert('View-only access: User cannot modify Holding data.');
+                    return;
+                }
+
                 const coachNo = e.target.dataset.coach;
                 const corrosionInput = document.getElementById(`holding-corrosion-${coachNo}`);
                 const pdcInput = document.getElementById(`holding-pdc-${coachNo}`);
