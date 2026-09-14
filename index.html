@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liluah Workshop Coach Management App</title>
+    <style>
+        :root {
+            --primary: #003366;
+            --primary-light: #eef4fb;
+            --secondary: #4a90e2;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --bg: #f4f7f6;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            width: 95%;
+            max-width: 1250px;
+            padding: 25px;
+            margin: 20px;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .hidden { display: none !important; }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        input.invalid {
+            border-color: var(--danger);
+            background-color: #ffe6e6;
+        }
+
+        .error-text {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s, background-color 0.2s;
+            padding: 10px 14px;
+            border-radius: 4px;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn-green { background-color: var(--success); color: white; }
+        .btn-yellow { background-color: var(--warning); color: #212529; }
+        .btn-red { background-color: var(--danger); color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .nav-card {
+            background: var(--primary-light);
+            border: 1px solid var(--secondary);
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-card:hover, .nav-card.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input { flex: 1; }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        th { background-color: var(--primary); color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .holding-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .custom-multiselect {
+            position: relative;
+        }
+
+        .select-box {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            user-select: none;
+        }
+
+        .checkboxes-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid #ccc;
+            border-top: none;
+            background-color: #ffffff;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .dropdown-search-container {
+            padding: 6px;
+            position: sticky;
+            top: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #eee;
+            z-index: 2;
+        }
+
+        .dropdown-search-input {
+            width: 100%;
+            padding: 6px;
+            font-size: 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .checkboxes-list {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .checkboxes-dropdown label {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            font-weight: normal;
+            margin-bottom: 0;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .checkboxes-dropdown label:hover {
+            background-color: var(--primary-light);
+        }
+
+        .checkboxes-dropdown input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .holding-summary {
+            background: var(--primary-light);
+            border: 1px solid var(--secondary);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+            font-weight: bold;
+            color: var(--primary);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .detail-card h4 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            font-size: 13px;
+        }
+
+        .detail-item span {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .table-date-input {
+            font-size: 12px;
+            padding: 4px;
+            width: 120px;
+        }
+
+        .table-date-input:disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+            border-color: #ced4da;
+            cursor: not-allowed;
+            opacity: 1;
+        }
+        .inturn-entry-table th,
+        .inturn-entry-table td {
+            min-width: 125px;
+            vertical-align: middle;
+        }
+
+        .inturn-entry-table th:first-child,
+        .inturn-entry-table td:first-child {
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .inturn-entry-table input,
+        .inturn-entry-table select {
+            width: 100%;
+            min-width: 115px;
+        }
+
+        .shunting-type-row {
+            display: none;
+        }
+
+.shunting-type-row.visible {
+            display: block;
+        }
+
+        /* Compact Monthly Target layout - designed to fit all 12 months and the
+           column-total row on one normal desktop screen with minimal/no scrolling. */
+        #monthly-target-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        #monthly-target-table th,
+        #monthly-target-table td {
+            text-align: center;
+            padding: 3px 2px;
+            min-width: 0;
+            height: 31px;
+            white-space: nowrap;
+        }
+
+        #monthly-target-table th {
+            font-size: 10px;
+            line-height: 1.1;
+        }
+
+        #monthly-target-table input,
+        #monthly-target-table select {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 3px 2px;
+            height: 25px;
+            font-size: 11px;
+        }
+
+        #monthly-target-table .wdays-input {
+            width: 100%;
+            min-width: 0;
+            text-align: center;
+        }
+
+        #monthly-target-table th:nth-child(1),
+        #monthly-target-table td:nth-child(1) { width: 3%; }
+        #monthly-target-table th:nth-child(2),
+        #monthly-target-table td:nth-child(2) { width: 8%; }
+        #monthly-target-table th:nth-child(3),
+        #monthly-target-table td:nth-child(3) { width: 6%; }
+        #monthly-target-table th:nth-child(4),
+        #monthly-target-table td:nth-child(4) { width: 6%; }
+        #monthly-target-table th:nth-child(n+5),
+        #monthly-target-table td:nth-child(n+5) { width: 7.6%; }
+
+        #monthly-target-table .target-total {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+
+        #monthly-target-table .monthly-target-column-total td {
+            background-color: #dfe8e2;
+            font-weight: bold;
+            border-top: 2px solid #555;
+        }
+
+        #monthly-target-table .monthly-target-column-total input {
+            background-color: #dfe8e2;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1100px) {
+            #monthly-target-table { font-size: 9px; }
+            #monthly-target-table th { font-size: 8px; }
+            #monthly-target-table input,
+            #monthly-target-table select { font-size: 9px; padding: 2px 1px; }
+            #monthly-target-table th, #monthly-target-table td { padding: 2px 1px; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Login Screen -->
+    <div id="login-view">
+        <h1>Liluah Workshop Coach Management System</h1>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Login</button>
+            <p id="login-error" class="error-text" style="text-align:center; margin-top:10px;">Invalid Username or Password!</p>
+        </form>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="app-view" class="hidden">
+        <div class="top-bar">
+            <h2>Liluah Workshop Coach Management System</h2>
+            <button class="btn btn-secondary" id="logout-btn">Logout</button>
+        </div>
+
+        <div class="nav-grid">
+            <div class="nav-card active" data-activity="inturn">Coach Inturn</div>
+            <div class="nav-card" data-activity="shunting">Coach Shunting</div>
+            <div class="nav-card" data-activity="programme">Coach Programme</div>
+            <div class="nav-card" data-activity="outturn">Coach Outturn</div>
+            <div class="nav-card" data-activity="traffic">Traffic Fit</div>
+            <div class="nav-card" data-activity="physical-out">Physical Out</div>
+            <div class="nav-card" data-activity="holding">Coach Holding</div>
+            <div class="nav-card" data-activity="monthly-target">Monthly Target</div>
+        </div>
+
+        <!-- Activity 1: Inturn -->
+        <div id="act-inturn" class="activity-section">
+            <h3>Coach Inturn Entry</h3>
+
+            <div id="inturn-count-section">
+                <div class="form-group" style="max-width: 350px; margin: 0 auto 10px;">
+                    <label for="inturn-coach-count">How many coaches are to be Fed?</label>
+                    <select id="inturn-coach-count">
+                        <option value="">----Select Number----</option>
+                        <option value="1">1</option><option value="2">2</option>
+                        <option value="3">3</option><option value="4">4</option>
+                        <option value="5">5</option><option value="6">6</option>
+                        <option value="7">7</option><option value="8">8</option>
+                        <option value="9">9</option><option value="10">10</option>
+                        <option value="11">11</option><option value="12">12</option>
+                        <option value="13">13</option><option value="14">14</option>
+                        <option value="15">15</option><option value="16">16</option>
+                        <option value="17">17</option><option value="18">18</option>
+                        <option value="19">19</option><option value="20">20</option>
+                    </select>
+                </div>
+                <button type="button" class="btn" id="inturn-count-submit"
+                        style="width: 100%; max-width: 350px; display:block; margin:0 auto;">
+                    Submit
+                </button>
+            </div>
+
+            <div id="inturn-entry-section" class="hidden" style="margin-top:20px;">
+                <div class="table-responsive">
+                    <form id="inturn-form">
+                        <table id="inturn-entry-table" class="inturn-entry-table">
+                            <thead>
+                                <tr>
+                                    <th>Sl.</th>
+                                    <th>Railway</th>
+                                    <th>Coach Number</th>
+                                    <th>Coach Type</th>
+                                    <th>Division</th>
+                                    <th>Coach Category</th>
+                                    <th>Secondary Suspension</th>
+                                    <th>Vehicle Type</th>
+                                    <th>Repair Type</th>
+                                    <th>Yard In Date</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <button type="submit" class="btn btn-green"
+                                style="width:100%; margin-top:15px;">
+                            Submit All Coach Details
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 2: Shunting -->
+        <div id="act-shunting" class="activity-section hidden">
+            <h3>Coach Shunting in Shop</h3>
+            <div class="search-box">
+                <input type="text" id="shunting-search" placeholder="Enter Coach Number">
+                <button class="btn" id="shunting-fetch-btn">Fetch</button>
+            </div>
+            <form id="shunting-form" class="hidden">
+                <div class="form-group">
+                    <label for="shunting-railway">Railway</label>
+                    <select id="shunting-railway">
+                        <option value="">----Select----</option>
+                        <option>CR</option><option>ER</option><option>NFR</option><option>NR</option>
+                        <option>SCR</option><option>SR</option><option>WR</option><option>SER</option>
+                        <option>NER</option><option>ECOR</option><option>ECR</option><option>SWR</option>
+                        <option>NWR</option><option>SECR</option><option>NCR</option><option>WCR</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shunting-coach-type">Coach Type</label>
+                    <input type="text" id="shunting-coach-type">
+                    <span class="error-text" id="shunting-coach-type-error">
+                        Please enter Coach Type.
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label for="shunting-division">Division (Enter in CAPS only)</label>
+                    <input type="text" id="shunting-division" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label for="shunting-location">Location</label>
+                    <select id="shunting-location">
+                        <option value="">----Select----</option>
+                        <option>Yard</option><option>L/Bay</option><option>Aw Corr</option>
+                        <option>SCR</option><option>M shop</option><option>L shop</option>
+                        <option>J shop</option><option>MLR WIP</option><option>CR shop</option>
+                        <option>Paint</option><option>B/L</option><option>Power Car</option>
+                        <option>Nomination</option><option>Corrosion</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="shunting-repair">Repair Type</label>
+                    <select id="shunting-repair">
+                        <option value="">----Select----</option>
+                        <option>POH</option><option>POH + CONV</option><option>MLR</option>
+                        <option>IOH</option><option>NPOH</option>
+                    </select>
+                </div>
+                <div class="form-group shunting-type-row" id="shunting-poh-conv-row">
+                    <label for="shunting-poh-conv-type">
+                        Coach Type for POH + CONV
+                    </label>
+                    <select id="shunting-poh-conv-type">
+                        <option value="">----Select Coach Type----</option>
+                        <option value="NMGHS">NMGHS</option>
+                        <option value="RCC">RCC</option>
+                        <option value="AC RCC">AC RCC</option>
+                        <option value="ART">ART</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shunting-corrosion">Corrosion Shop</label>
+                    <select id="shunting-corrosion">
+                        <option value="">----Select----</option>
+                        <option>SCR AC</option><option>SCR NAC</option><option>Dhara</option>
+                        <option>M shop</option><option>CR shop</option><option>L shop</option>
+                        <option>NMG Conv</option><option>RCC Conv</option><option>ART Conv</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="shunting-corrosion-date">Corrosion Rel Date</label>
+                    <input type="date" id="shunting-corrosion-date">
+                </div>
+                <div class="form-group">
+                    <label for="shunting-pdc">PDC (Proposed Date of Completion)</label>
+                    <input type="date" id="shunting-pdc">
+                </div>
+                <div class="form-group">
+                    <label for="shunting-furnishing">Furnishing Shop</label>
+                    <select id="shunting-furnishing">
+                        <option value="">----Select----</option>
+                        <option>Repair Bay</option><option>FUR 1 (RAJ)</option>
+                        <option>FUR 2 (RAJ)</option><option>FUR 3 (AC)</option><option>FUR 4 (AC)</option>
+			<option>NMG Conv</option><option>RCC Conv</option><option>ART Conv</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-green" style="width: 100%;">Save Shunting Details</button>
+            </form>
+        </div>
+
+        <!-- Activity 3: Programme Schedule -->
+        <div id="act-programme" class="activity-section hidden">
+            <h3>Coach Programme Schedule</h3>
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 15px;">
+                <div>
+                    <label for="prog-from">From Date</label>
+                    <input type="date" id="prog-from">
+                </div>
+                <div>
+                    <label for="prog-to">To Date</label>
+                    <input type="date" id="prog-to">
+                </div>
+                <button class="btn" id="prog-filter-btn">Filter Coaches</button>
+            </div>
+            <div class="table-responsive">
+                <table id="programme-table">
+                    <thead>
+                        <tr>
+                            <th>PDC Date</th>
+                            <th>Modify PDC Date</th>
+                            <th>Coach No</th>
+                            <th>Railway</th>
+                            <th>Type</th>
+                            <th>Corrosion Shop</th>
+                            <th>Furnishing Shop</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Activity 4: Outturn (NTXR) -->
+        <div id="act-outturn" class="activity-section hidden">
+            <h3>Coach Outturn (NTXR)</h3>
+            <div class="search-box">
+                <input type="text" id="outturn-search" placeholder="Enter Coach Number">
+                <button class="btn fetch-generic-btn" data-type="outturn">Fetch</button>
+            </div>
+            <div id="outturn-details" class="hidden"></div>
+        </div>
+
+        <!-- Activity 5: Traffic Fit -->
+        <div id="act-traffic" class="activity-section hidden">
+            <h3>Coach Traffic Fit</h3>
+            <div class="search-box">
+                <input type="text" id="traffic-search" placeholder="Enter Coach Number">
+                <button class="btn fetch-generic-btn" data-type="traffic">Fetch</button>
+            </div>
+            <div id="traffic-details" class="hidden"></div>
+        </div>
+
+        <!-- Activity 6: Physical Out -->
+        <div id="act-physical-out" class="activity-section hidden">
+            <h3>Coach Physical Out</h3>
+            <div class="search-box">
+                <input type="text" id="physical-search" placeholder="Enter Coach Number">
+                <button class="btn fetch-generic-btn" data-type="physical">Fetch</button>
+            </div>
+            <div id="physical-details" class="hidden"></div>
+        </div>
+
+        <!-- Activity 7: Coach Holding -->
+        <div id="act-holding" class="activity-section hidden">
+            <h3>Coach Holding</h3>
+            <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:10px;">
+                <span style="font-size:12px; color:#555;">Use search inside dropdowns to quickly find items.</span>
+                <button class="btn btn-secondary" id="holding-refresh-options" style="padding: 6px 12px;">Refresh Filter Lists</button>
+            </div>
+
+            <div class="holding-grid">
+                <div class="form-group custom-multiselect" id="ms-railway" data-field="railway">
+                    <label>1. Railway</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-type" data-field="coachType">
+                    <label>2. Coach Type</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-category" data-field="category">
+                    <label>3. Coach Category</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-suspension" data-field="suspension">
+                    <label>4. Secondary Suspension</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-vehicle" data-field="vehicleType">
+                    <label>5. Vehicle Type</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-repair" data-field="repairType">
+                    <label>6. Repair Type</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-location" data-field="location">
+                    <label>7. Location</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+                <div class="form-group custom-multiselect" id="ms-division" data-field="division">
+                    <label>8. Division</label>
+                    <div class="select-box"><span>All Selected</span> ▼</div>
+                    <div class="checkboxes-dropdown"></div>
+                </div>
+            </div>
+
+            <button class="btn btn-green" id="holding-generate-btn" style="width: 100%; margin-top: 15px;">Generate Holding Report</button>
+
+            <div id="holding-summary-bar" class="holding-summary hidden"></div>
+
+            <div class="table-responsive">
+                <table id="holding-table" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>Coach No</th>
+                            <th>Railway</th>
+                            <th>Division</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Suspension</th>
+                            <th>Vehicle</th>
+                            <th>Repair</th>
+                            <th>Location</th>
+                            <th>Yard In</th>
+                            <th>Dtn Days</th>
+                            <th>Corrosion Rel Date</th>
+                            <th>PDC / NTXR Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Activity 8: Monthly Target -->
+        <div id="act-monthly-target" class="activity-section hidden">
+            <h3>Monthly Target</h3>
+            <div class="table-responsive">
+                <table id="monthly-target-table" class="inturn-entry-table">
+                    <thead>
+                        <tr>
+                            <th>Sl.</th>
+                            <th>Month</th>
+                            <th>Year</th>
+                            <th>W/Days</th>
+                            <th>ICF AC</th>
+                            <th>ICF NAC</th>
+                            <th>ICF TOT</th>
+                            <th>LHB AC</th>
+                            <th>LHB NAC</th>
+                            <th>LHB TOT</th>
+                            <th>NMGHS POH</th>
+                            <th>MLR</th>
+                            <th>VB</th>
+                            <th>G/TOT</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-green" id="monthly-target-save-btn" style="width:100%; margin-top:15px;">Save Monthly Target</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+        getFirestore, 
+        doc, 
+        setDoc, 
+        getDoc, 
+        updateDoc, 
+        deleteField,
+        collection, 
+        query, 
+        where, 
+        getDocs,
+        deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCwqzy0J0uKfvZqoedNW7jKNfgYlKj30Js",
+        authDomain: "liluah-workshop-coach-app.firebaseapp.com",
+        projectId: "liluah-workshop-coach-app",
+        storageBucket: "liluah-workshop-coach-app.firebasestorage.app",
+        messagingSenderId: "454526441780",
+        appId: "1:454526441780:web:c640032bc5721ede37ed61",
+        measurementId: "G-Y56600W1T1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let activeShuntingCoach = null;
+    let cachedCoaches = [];
+    let currentUserRole = null; // 'admin' or 'viewer'
+
+    // Helper Utility Functions
+    const formatDateToDMY = (dateStr) => {
+        if (!dateStr) return 'N/A';
+        const parts = dateStr.split('-');
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
+    };
+
+    const calculateDetentionDays = (yardInDateStr) => {
+        if (!yardInDateStr) return 'N/A';
+        const yardInDate = new Date(yardInDateStr);
+        const today = new Date();
+        yardInDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diffTime = today - yardInDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 ? diffDays : 0;
+    };
+
+    const getTodayISO = () => new Date().toISOString().split('T')[0];
+
+    // Screen Routing & Navigation
+    const showActivity = (actId) => {
+        if (currentUserRole === 'viewer' && !['programme', 'holding', 'monthly-target'].includes(actId)) {
+            actId = 'programme';
+        }
+        document.querySelectorAll('.activity-section').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.nav-card').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`act-${actId}`).classList.remove('hidden');
+        document.querySelector(`.nav-card[data-activity="${actId}"]`).classList.add('active');
+        
+        if (actId === 'holding') {
+            loadHoldingDropdowns();
+        }
+        if (actId === 'monthly-target') {
+            buildMonthlyTargetRows();
+        }
+    };
+
+    document.querySelectorAll('.nav-card').forEach(card => {
+        card.addEventListener('click', () => showActivity(card.dataset.activity));
+    });
+
+    // Authentication Setup
+    const applyUserPermissions = (role) => {
+        currentUserRole = role;
+        applyMonthlyTargetPermissions();
+
+        const isAdmin = role === 'admin';
+        const isViewer = role === 'viewer';
+
+        // Viewer can see Coach Programme, Coach Holding and Monthly Target only.
+        document.querySelectorAll('.nav-card').forEach(card => {
+            const activity = card.dataset.activity;
+            const allowedForViewer = activity === 'programme' || activity === 'holding' || activity === 'monthly-target';
+            card.style.display = (isAdmin || allowedForViewer) ? '' : 'none';
+        });
+
+        // Explicitly keep the Inturn data-entry workflow inaccessible to viewers.
+        const inturnCountSubmit = document.getElementById('inturn-count-submit');
+        const inturnCount = document.getElementById('inturn-coach-count');
+        if (inturnCountSubmit) inturnCountSubmit.disabled = isViewer;
+        if (inturnCount) inturnCount.disabled = isViewer;
+
+        // Viewer is read-only, but Coach Programme date-range filtering must remain usable.
+        if (isViewer) {
+            // Programme: From Date, To Date and Filter Coaches remain enabled.
+            document.getElementById('prog-from').disabled = false;
+            document.getElementById('prog-to').disabled = false;
+            document.getElementById('prog-filter-btn').disabled = false;
+
+            // Disable only programme data-editing controls.
+            document.querySelectorAll('.pdc-update-input').forEach(el => el.disabled = true);
+
+            // Holding: viewing/filtering/report generation remains available,
+            // but database date-edit controls are disabled when the report is rendered.
+            document.getElementById('holding-generate-btn').disabled = false;
+            document.getElementById('holding-refresh-options').disabled = false;
+        }
+
+        // Ensure viewer starts on Coach Programme.
+        if (isViewer) {
+            showActivity('programme');
+        } else {
+            showActivity('inturn');
+        }
+    };
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value.trim();
+
+        if (user === 'Admin' && pass === 'Admin') {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            document.getElementById('login-error').style.display = 'none';
+            applyUserPermissions('admin');
+        } else if (user === 'User' && pass === 'User') {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            document.getElementById('login-error').style.display = 'none';
+            applyUserPermissions('viewer');
+        } else {
+            currentUserRole = null;
+            document.getElementById('login-error').style.display = 'block';
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        currentUserRole = null;
+        applyMonthlyTargetPermissions();
+        document.getElementById('app-view').classList.add('hidden');
+        document.getElementById('login-view').classList.remove('hidden');
+        document.getElementById('login-form').reset();
+
+        // Restore controls for the next Admin login.
+        document.querySelectorAll('.nav-card').forEach(card => card.style.display = '');
+        document.querySelectorAll('#act-programme input, #act-programme button, #act-holding input, #act-holding button, #act-monthly-target input, #act-monthly-target select, #act-monthly-target button')
+            .forEach(el => el.disabled = false);
+        document.getElementById('inturn-coach-count').disabled = false;
+        document.getElementById('inturn-count-submit').disabled = false;
+    });
+
+    // Form Input Validations
+    document.querySelectorAll('[data-validate="alphanumeric"]').forEach(input => {
+        input.addEventListener('input', () => {
+            const regex = /^[a-zA-Z0-9]*$/;
+            const errorText = input.nextElementSibling;
+            if (!regex.test(input.value)) {
+                input.classList.add('invalid');
+                if (errorText) errorText.style.display = 'block';
+            } else {
+                input.classList.remove('invalid');
+                if (errorText) errorText.style.display = 'none';
+            }
+        });
+    });
+
+    // Activity 1: Inturn - Multi-Coach Entry
+    const createInturnRow = (index) => {
+        return `
+            <tr>
+                <td>${index}</td>
+                <td>
+                    <select class="inturn-field" data-field="railway" required>
+                        <option value="">----Select----</option>
+                        <option>CR</option><option>ER</option><option>NFR</option><option>NR</option>
+                        <option>SCR</option><option>SR</option><option>WR</option><option>SER</option>
+                        <option>NER</option><option>ECOR</option><option>ECR</option><option>SWR</option>
+                        <option>NWR</option><option>SECR</option><option>NCR</option><option>WCR</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" class="inturn-field" data-field="coachNumber"
+                           data-validate="alphanumeric" required>
+                </td>
+                <td>
+                    <input type="text" class="inturn-field" data-field="coachType"
+                           data-validate="alphanumeric">
+                </td>
+                <td>
+                    <input type="text" class="inturn-field" data-field="division"
+                           style="text-transform:uppercase;">
+                </td>
+                <td>
+                    <select class="inturn-field" data-field="category">
+                        <option value="">----Select----</option>
+                        <option>ICF AC</option><option>ICF NAC</option>
+                        <option>LHB AC</option><option>LHB NAC</option><option>VB</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="inturn-field" data-field="suspension">
+                        <option value="">----Select----</option>
+                        <option>NA</option><option>Coil Spring</option><option>Air Spring</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="inturn-field" data-field="vehicleType">
+                        <option value="">----Select----</option>
+                        <option>PCV</option><option>OCV</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="inturn-field" data-field="repairType">
+                        <option value="">----Select----</option>
+                        <option>POH</option><option>POH + CONV</option><option>MLR</option>
+                        <option>IOH</option><option>NPOH</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="date" class="inturn-field" data-field="yardInDate">
+                </td>
+                <td>
+                    <select class="inturn-field" data-field="location">
+                        <option value="Yard" selected>Yard</option>
+                        <option value="L/Bay">L/Bay</option><option value="Aw Corr">Aw Corr</option>
+                        <option value="SCR">SCR</option><option value="M shop">M shop</option>
+                        <option value="L shop">L shop</option><option value="J shop">J shop</option>
+                        <option value="MLR WIP">MLR WIP</option><option value="CR shop">CR shop</option>
+                        <option value="Paint">Paint</option><option value="B/L">B/L</option>
+                        <option value="Power Car">Power Car</option><option value="Nomination">Nomination</option>
+                        <option value="Corrosion">Corrosion</option>
+                    </select>
+                </td>
+            </tr>
+        `;
+    };
+
+    document.getElementById('inturn-count-submit').addEventListener('click', () => {
+        if (currentUserRole !== 'admin') {
+            alert('View-only access. Admin login is required for this operation.');
+            return;
+        }
+
+        const count = parseInt(document.getElementById('inturn-coach-count').value, 10);
+        if (!count || count < 1 || count > 20) {
+            alert('Please select how many coaches are to be Fed (1 to 20).');
+            return;
+        }
+
+        const tbody = document.querySelector('#inturn-entry-table tbody');
+        tbody.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            tbody.insertAdjacentHTML('beforeend', createInturnRow(i));
+        }
+
+        document.getElementById('inturn-entry-section').classList.remove('hidden');
+
+        // Apply the same validation behavior to dynamically-created fields.
+        tbody.querySelectorAll('[data-validate="alphanumeric"]').forEach(input => {
+            input.addEventListener('input', () => {
+                const regex = /^[a-zA-Z0-9]*$/;
+                if (!regex.test(input.value)) {
+                    input.classList.add('invalid');
+                } else {
+                    input.classList.remove('invalid');
+                }
+            });
+        });
+
+        // Excel multi-row paste support for the manually-entered fields:
+        // Coach Number, Coach Type and Division.
+        //
+        // 1) Copy one column from Excel and paste into any one of these fields:
+        //    the values are filled down row-by-row from the selected row.
+        // 2) Copy 3 columns (Coach Number | Coach Type | Division) from Excel
+        //    and paste into any Coach Number field: all three fields are filled
+        //    for the required number of consecutive rows.
+        // 3) A paste starting in Coach Type or Division with multiple columns
+        //    fills that field downward using the first column of the pasted data.
+        // 4) Extra clipboard rows are ignored if they exceed the displayed rows.
+        // 5) Blank cells are pasted as blank values, preserving the Excel layout.
+        tbody.querySelectorAll('input.inturn-field[data-field="coachNumber"], input.inturn-field[data-field="coachType"], input.inturn-field[data-field="division"]').forEach(input => {
+            input.addEventListener('paste', (event) => {
+                const clipboardText = event.clipboardData?.getData('text/plain') || '';
+                if (!clipboardText) return;
+
+                const lines = clipboardText.replace(/\r/g, '').split('\n');
+                // Remove only the final empty line normally added by Excel.
+                if (lines.length && lines[lines.length - 1] === '') lines.pop();
+                if (!lines.length) return;
+
+                const matrix = lines.map(line => line.split('\t'));
+                const startRow = input.closest('tr');
+                if (!startRow) return;
+
+                const allRows = Array.from(tbody.querySelectorAll('tr'));
+                const startIndex = allRows.indexOf(startRow);
+                if (startIndex < 0) return;
+
+                const startField = input.dataset.field;
+                const editableFields = ['coachNumber', 'coachType', 'division'];
+
+                // Only take the first three columns when pasting a block into
+                // Coach Number. This is the intended Excel format:
+                // Coach Number | Coach Type | Division.
+                if (startField === 'coachNumber' && matrix.some(row => row.length >= 2)) {
+                    event.preventDefault();
+
+                    matrix.forEach((rowValues, offset) => {
+                        const row = allRows[startIndex + offset];
+                        if (!row) return;
+
+                        editableFields.forEach((field, colIndex) => {
+                            const target = row.querySelector(`[data-field="${field}"]`);
+                            if (!target) return;
+                            target.value = (rowValues[colIndex] ?? '').trim();
+                            target.dispatchEvent(new Event('input', { bubbles: true }));
+                        });
+                    });
+                    return;
+                }
+
+                // One-column paste into Coach Number / Coach Type / Division:
+                // fill that particular field downward.
+                if (matrix.length > 1 || matrix[0].length === 1) {
+                    event.preventDefault();
+
+                    matrix.forEach((rowValues, offset) => {
+                        const row = allRows[startIndex + offset];
+                        if (!row) return;
+
+                        const target = row.querySelector(`[data-field="${startField}"]`);
+                        if (!target) return;
+                        target.value = (rowValues[0] ?? '').trim();
+                        target.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                }
+            });
+        });
+    });
+
+    document.getElementById('inturn-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (currentUserRole !== 'admin') {
+            alert('View-only access. Admin login is required for this operation.');
+            return;
+        }
+
+        const rows = Array.from(document.querySelectorAll('#inturn-entry-table tbody tr'));
+        if (!rows.length) {
+            alert('Please select the number of coaches first.');
+            return;
+        }
+
+        const coachEntries = [];
+        const coachNumbers = new Set();
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const getValue = (field) => {
+                const el = row.querySelector(`[data-field="${field}"]`);
+                return el ? el.value.trim() : '';
+            };
+
+            const num = getValue('coachNumber').toUpperCase();
+            const typeEl = row.querySelector('[data-field="coachType"]');
+
+            if (!num) {
+                alert(`Please enter Coach Number for row ${i + 1}.`);
+                return;
+            }
+
+            if (row.querySelector('[data-field="coachNumber"]').classList.contains('invalid') ||
+                (typeEl && typeEl.classList.contains('invalid'))) {
+                alert(`Please fix validation errors in row ${i + 1}.`);
+                return;
+            }
+
+            if (coachNumbers.has(num)) {
+                alert(`Duplicate Coach Number ${num} found. Please enter unique Coach Numbers.`);
+                return;
+            }
+
+            coachNumbers.add(num);
+
+            coachEntries.push({
+                railway: getValue('railway'),
+                coachNumber: num,
+                coachType: getValue('coachType').toUpperCase(),
+                division: getValue('division').toUpperCase(),
+                category: getValue('category'),
+                suspension: getValue('suspension'),
+                vehicleType: getValue('vehicleType'),
+                repairType: getValue('repairType'),
+                yardInDate: getValue('yardInDate'),
+                location: getValue('location') || 'Yard'
+            });
+        }
+
+        try {
+            // Check every entered Coach Number against the existing database BEFORE
+            // writing anything. If even one coach already exists, cancel the entire
+            // submission and show the requested popup.
+            for (const entry of coachEntries) {
+                const existingSnap = await getDoc(doc(db, "coaches", entry.coachNumber));
+
+                if (existingSnap.exists()) {
+                    alert("Coach already exists in database");
+                    return;
+                }
+            }
+
+            // All Coach Numbers are new, so save the complete submission.
+            for (const entry of coachEntries) {
+                await setDoc(doc(db, "coaches", entry.coachNumber), entry);
+            }
+
+            alert(`${coachEntries.length} coach(es) successfully saved in database!`);
+
+            this.reset();
+            document.getElementById('inturn-entry-section').classList.add('hidden');
+            document.getElementById('inturn-entry-table').querySelector('tbody').innerHTML = '';
+            document.getElementById('inturn-coach-count').value = '';
+        } catch (error) {
+            console.error("Error saving coaches to database: ", error);
+            alert("Failed to save coach data to database. Error: " + error.message);
+        }
+    });
+
+    // Activity 2: Shunting Execution
+    const shuntingRepairSelect = document.getElementById('shunting-repair');
+    const shuntingCoachTypeInput = document.getElementById('shunting-coach-type');
+    const shuntingPohConvRow = document.getElementById('shunting-poh-conv-row');
+    const shuntingPohConvType = document.getElementById('shunting-poh-conv-type');
+
+    const updateShuntingCoachTypeDisplay = () => {
+        const isPohConv = shuntingRepairSelect.value === 'POH + CONV';
+        shuntingPohConvRow.classList.toggle('visible', isPohConv);
+
+        if (isPohConv) {
+            // If the existing Coach Type already matches one of the four conversion
+            // types, pre-select it.
+            const currentType = shuntingCoachTypeInput.value.trim();
+            if (['NMGHS', 'RCC', 'AC RCC', 'ART'].includes(currentType)) {
+                shuntingPohConvType.value = currentType;
+            }
+        } else {
+            shuntingPohConvType.value = '';
+        }
+    };
+
+    shuntingRepairSelect.addEventListener('change', updateShuntingCoachTypeDisplay);
+
+    shuntingPohConvType.addEventListener('change', () => {
+        if (shuntingPohConvType.value) {
+            shuntingCoachTypeInput.value = shuntingPohConvType.value;
+        }
+    });
+
+    document.getElementById('shunting-fetch-btn').addEventListener('click', async () => {
+        const num = document.getElementById('shunting-search').value.toUpperCase().trim();
+        if (!num) {
+            alert('Please enter Coach Number.');
+            return;
+        }
+
+        try {
+            const docRef = doc(db, "coaches", num);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                activeShuntingCoach = num;
+                const data = docSnap.data();
+
+                document.getElementById('shunting-railway').value = data.railway || '';
+                document.getElementById('shunting-coach-type').value = data.coachType || '';
+                document.getElementById('shunting-division').value = data.division || '';
+                document.getElementById('shunting-location').value = data.location || '';
+                document.getElementById('shunting-repair').value = data.repairType || '';
+                document.getElementById('shunting-corrosion').value = data.corrosionShop || '';
+                document.getElementById('shunting-corrosion-date').value = data.corrosionRelDate || '';
+                document.getElementById('shunting-pdc').value = data.pdc || '';
+                document.getElementById('shunting-furnishing').value = data.furnishingShop || '';
+
+                updateShuntingCoachTypeDisplay();
+
+                document.getElementById('shunting-form').classList.remove('hidden');
+            } else {
+                alert('Coach Number not found in database!');
+                document.getElementById('shunting-form').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error("Error fetching coach: ", error);
+            alert("Fetch failed: " + error.message);
+        }
+    });
+
+    document.getElementById('shunting-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (currentUserRole !== 'admin') {
+            alert('View-only access. Admin login is required for this operation.');
+            return;
+        }
+
+        if (!activeShuntingCoach) return;
+
+        const repairType = document.getElementById('shunting-repair').value;
+        let coachType = document.getElementById('shunting-coach-type').value.toUpperCase().trim();
+
+        if (repairType === 'POH + CONV') {
+            if (!shuntingPohConvType.value) {
+                alert('Please select the Coach Type for POH + CONV: NMGHS, RCC, AC RCC or ART.');
+                return;
+            }
+            coachType = shuntingPohConvType.value;
+        }
+
+        try {
+            const docRef = doc(db, "coaches", activeShuntingCoach);
+            await updateDoc(docRef, {
+                railway: document.getElementById('shunting-railway').value || '',
+                coachType: coachType,
+                division: document.getElementById('shunting-division').value.toUpperCase().trim() || '',
+                location: document.getElementById('shunting-location').value || '',
+                repairType: repairType || '',
+                corrosionShop: document.getElementById('shunting-corrosion').value || '',
+                corrosionRelDate: document.getElementById('shunting-corrosion-date').value || '',
+                pdc: document.getElementById('shunting-pdc').value || '',
+                furnishingShop: document.getElementById('shunting-furnishing').value || ''
+            });
+
+            alert(`Shunting details saved for Coach ${activeShuntingCoach}!`);
+
+            this.reset();
+            shuntingPohConvRow.classList.remove('visible');
+            shuntingPohConvType.value = '';
+            document.getElementById('shunting-form').classList.add('hidden');
+            activeShuntingCoach = null;
+        } catch (error) {
+            console.error("Error updating shunting: ", error);
+            alert("Failed to update shunting details: " + error.message);
+        }
+    });
+
+    // Activity 3: Programme Schedule Operations
+    document.getElementById('prog-filter-btn').addEventListener('click', async () => {
+        const from = document.getElementById('prog-from').value;
+        const to = document.getElementById('prog-to').value;
+
+        if (!from || !to) {
+            alert('Please select both From and To dates.');
+            return;
+        }
+
+        const tbody = document.querySelector('#programme-table tbody');
+        tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+
+        try {
+            const q = query(collection(db, "coaches"), where("pdc", ">=", from), where("pdc", "<=", to));
+            const querySnapshot = await getDocs(q);
+            tbody.innerHTML = '';
+
+            if (querySnapshot.empty) {
+                tbody.innerHTML = '<tr><td colspan="7">No coaches programmed for selected date range.</td></tr>';
+                return;
+            }
+
+            querySnapshot.forEach((docSnap) => {
+                const coach = docSnap.data();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td id="pdc-display-${coach.coachNumber}">${formatDateToDMY(coach.pdc)}</td>
+                    <td>
+                        <input type="date" value="${coach.pdc || ''}" class="pdc-update-input" id="pdc-input-${coach.coachNumber}" ${currentUserRole === 'viewer' ? 'disabled' : ''}>
+                    </td>
+                    <td>${coach.coachNumber}</td>
+                    <td>${coach.railway || ''}</td>
+                    <td>${coach.coachType || ''}</td>
+                    <td>${coach.corrosionShop || ''}</td>
+                    <td>${coach.furnishingShop || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.pdc-update-input').forEach(input => {
+                input.addEventListener('change', async (e) => {
+                    if (currentUserRole !== 'admin') {
+                        alert('View-only access. Admin login is required to modify PDC.');
+                        e.target.value = e.target.defaultValue;
+                        return;
+                    }
+
+                    const coachNo = e.target.id.replace('pdc-input-', '');
+                    const newPdc = e.target.value;
+                    if (!newPdc) return;
+
+                    try {
+                        await updateDoc(doc(db, "coaches", coachNo), { pdc: newPdc });
+                        document.getElementById(`pdc-display-${coachNo}`).innerText = formatDateToDMY(newPdc);
+                        e.target.defaultValue = newPdc;
+                        alert(`PDC updated for Coach ${coachNo}`);
+                    } catch (err) {
+                        alert(`Failed to update PDC: ${err.message}`);
+                    }
+                });
+            });
+
+        } catch (error) {
+            console.error("Error filtering programme: ", error);
+            tbody.innerHTML = '<tr><td colspan="7">Error fetching data.</td></tr>';
+        }
+    });
+
+    // Activities 4, 5, 6: Generic Fetch & Workflow Execution
+    document.querySelectorAll('.fetch-generic-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const type = btn.dataset.type;
+            const searchInput = document.getElementById(`${type}-search`);
+            const num = searchInput.value.toUpperCase();
+            const container = document.getElementById(`${type}-details`);
+
+            if (!num) return;
+
+            try {
+                const docSnap = await getDoc(doc(db, "coaches", num));
+                if (!docSnap.exists()) {
+                    alert('Coach not found in database!');
+                    container.classList.add('hidden');
+                    return;
+                }
+
+                const data = docSnap.data();
+                container.classList.remove('hidden');
+
+                if (type === 'outturn') {
+                    const currentDate = data.outturnDate || getTodayISO();
+                    container.innerHTML = `
+                        <div class="detail-card">
+                            <h4>Coach ${data.coachNumber}</h4>
+                            <p><strong>Railway:</strong> ${data.railway || 'N/A'} | <strong>Type:</strong> ${data.coachType || 'N/A'}</p>
+                            <p><strong>Current Outturn Status:</strong> ${data.outturnDate ? 'Outturned on ' + formatDateToDMY(data.outturnDate) : 'Pending'}</p>
+                            <div class="form-group" style="max-width: 250px;">
+                                <label>Outturn Date:</label>
+                                <input type="date" id="outturn-date-input" value="${currentDate}">
+                            </div>
+                            <div class="button-group">
+                                <button class="btn btn-green" id="save-outturn-btn">Update / Save Date</button>
+                                <button class="btn btn-red" id="delete-outturn-btn">Delete Date</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('save-outturn-btn')?.addEventListener('click', async () => {
+                        if (currentUserRole !== 'admin') {
+                            alert('View-only access. Admin login is required for this operation.');
+                            return;
+                        }
+                        const dateVal = document.getElementById('outturn-date-input').value;
+                        if (!dateVal) {
+                            alert('Please select a valid date.');
+                            return;
+                        }
+                        await updateDoc(doc(db, "coaches", num), { outturnDate: dateVal, location: "Detained" });
+                        alert(`Outturn date updated to ${formatDateToDMY(dateVal)} for Coach ${num}!`);
+                        btn.click();
+                    });
+
+                    document.getElementById('delete-outturn-btn')?.addEventListener('click', async () => {
+                        if (currentUserRole !== 'admin') {
+                            alert('View-only access. Admin login is required for this operation.');
+                            return;
+                        }
+                        if (confirm(`Are you sure you want to delete the Outturn Date for Coach ${num}?`)) {
+                            await updateDoc(doc(db, "coaches", num), { outturnDate: deleteField(), location: "B/L" });
+                            alert(`Outturn date deleted for Coach ${num}!`);
+                            btn.click();
+                        }
+                    });
+
+                } else if (type === 'traffic') {
+                    const currentDate = data.trafficFitDate || getTodayISO();
+                    container.innerHTML = `
+                        <div class="detail-card">
+                            <h4>Coach ${data.coachNumber}</h4>
+                            <p><strong>Outturn Date:</strong> ${data.outturnDate ? formatDateToDMY(data.outturnDate) : 'Not Outturned Yet'}</p>
+                            <p><strong>Traffic Fit Status:</strong> ${data.trafficFitDate ? 'Traffic Fit on ' + formatDateToDMY(data.trafficFitDate) : 'Pending'}</p>
+                            <div class="form-group" style="max-width: 250px;">
+                                <label>Traffic Fit Date:</label>
+                                <input type="date" id="traffic-date-input" value="${currentDate}">
+                            </div>
+                            <div class="button-group">
+                                <button class="btn btn-green" id="save-traffic-btn">Update / Save Date</button>
+                                <button class="btn btn-red" id="delete-traffic-btn">Delete Date</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('save-traffic-btn')?.addEventListener('click', async () => {
+                        if (currentUserRole !== 'admin') {
+                            alert('View-only access. Admin login is required for this operation.');
+                            return;
+                        }
+                        const dateVal = document.getElementById('traffic-date-input').value;
+                        if (!dateVal) {
+                            alert('Please select a valid date.');
+                            return;
+                        }
+                        await updateDoc(doc(db, "coaches", num), { trafficFitDate: dateVal, location: "Ready to Despatch" });
+                        alert(`Traffic Fit date updated to ${formatDateToDMY(dateVal)} for Coach ${num}!`);
+                        btn.click();
+                    });
+
+                    document.getElementById('delete-traffic-btn')?.addEventListener('click', async () => {
+                        if (currentUserRole !== 'admin') {
+                            alert('View-only access. Admin login is required for this operation.');
+                            return;
+                        }
+                        if (confirm(`Are you sure you want to delete the Traffic Fit Date for Coach ${num}?`)) {
+                            await updateDoc(doc(db, "coaches", num), { trafficFitDate: deleteField(), location: "Detained" });
+                            alert(`Traffic Fit date deleted for Coach ${num}!`);
+                            btn.click();
+                        }
+                    });
+
+                } else if (type === 'physical') {
+                    container.innerHTML = `
+                        <div class="detail-card">
+                            <h4>Coach ${data.coachNumber}</h4>
+                            <p><strong>Traffic Fit Date:</strong> ${data.trafficFitDate ? formatDateToDMY(data.trafficFitDate) : 'Pending Traffic Fit'}</p>
+                            <div class="button-group">
+                                <button class="btn btn-red" id="mark-physical-btn">Mark Physical Out & Remove from Active Holding</button>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('mark-physical-btn')?.addEventListener('click', async () => {
+                        if (currentUserRole !== 'admin') {
+                            alert('View-only access. Admin login is required for this operation.');
+                            return;
+                        }
+                        if (confirm(`Are you sure you want to mark Coach ${num} as Physical Out? This will complete its cycle.`)) {
+                            await deleteDoc(doc(db, "coaches", num));
+                            alert(`Coach ${num} marked Physical Out and removed from active database.`);
+                            container.classList.add('hidden');
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Error in action fetch: ", err);
+            }
+        });
+    });
+
+    // Activity 7: Coach Holding & Multi-Select Engine with Inline Search
+    const loadHoldingDropdowns = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "coaches"));
+            cachedCoaches = [];
+            querySnapshot.forEach(docSnap => cachedCoaches.push(docSnap.data()));
+
+            const fields = ['railway', 'coachType', 'category', 'suspension', 'vehicleType', 'repairType', 'location', 'division'];
+
+            fields.forEach(field => {
+                const uniqueValues = [...new Set(cachedCoaches.map(c => c[field]).filter(Boolean))].sort();
+                const wrapper = document.querySelector(`.custom-multiselect[data-field="${field}"]`);
+                if (!wrapper) return;
+
+                const dropdown = wrapper.querySelector('.checkboxes-dropdown');
+                dropdown.innerHTML = `
+                    <div class="dropdown-search-container" onclick="event.stopPropagation()">
+                        <input type="text" class="dropdown-search-input" placeholder="Search ${field}...">
+                    </div>
+                    <div class="checkboxes-list">
+                        <label><input type="checkbox" class="select-all" checked> <strong>(Select All)</strong></label>
+                        ${uniqueValues.map(val => `<label class="option-item"><input type="checkbox" value="${val}" checked> ${val}</label>`).join('')}
+                    </div>
+                `;
+
+                setupMultiselectEvents(wrapper);
+            });
+
+        } catch (err) {
+            console.error("Error building holding dropdowns:", err);
+        }
+    };
+
+    document.getElementById('holding-refresh-options').addEventListener('click', loadHoldingDropdowns);
+
+    const setupMultiselectEvents = (wrapper) => {
+        const selectBox = wrapper.querySelector('.select-box');
+        const dropdown = wrapper.querySelector('.checkboxes-dropdown');
+        const searchInput = dropdown.querySelector('.dropdown-search-input');
+        const selectAllCb = dropdown.querySelector('.select-all');
+        const optionCbs = dropdown.querySelectorAll('.option-item input[type="checkbox"]');
+        const displaySpan = selectBox.querySelector('span');
+
+        selectBox.onclick = (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.checkboxes-dropdown').forEach(d => {
+                if (d !== dropdown) d.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        };
+
+        // Filter list items based on search input
+        if (searchInput) {
+            searchInput.onkeyup = () => {
+                const filterStr = searchInput.value.toLowerCase();
+                const labels = dropdown.querySelectorAll('.option-item');
+                labels.forEach(lbl => {
+                    const txt = lbl.innerText.toLowerCase();
+                    if (txt.includes(filterStr)) {
+                        lbl.style.display = 'flex';
+                    } else {
+                        lbl.style.display = 'none';
+                    }
+                });
+            };
+        }
+
+        const updateSummaryText = () => {
+            const checkedCount = dropdown.querySelectorAll('.option-item input[type="checkbox"]:checked').length;
+            const totalCount = optionCbs.length;
+
+            if (checkedCount === totalCount) {
+                displaySpan.innerText = 'All Selected';
+                selectAllCb.checked = true;
+                selectAllCb.indeterminate = false;
+            } else if (checkedCount === 0) {
+                displaySpan.innerText = 'None Selected';
+                selectAllCb.checked = false;
+                selectAllCb.indeterminate = false;
+            } else {
+                displaySpan.innerText = `${checkedCount} Selected`;
+                selectAllCb.checked = false;
+                selectAllCb.indeterminate = true;
+            }
+        };
+
+        selectAllCb.onchange = () => {
+            optionCbs.forEach(cb => {
+                // Only change status of visible options if search filter is active
+                if (cb.closest('label').style.display !== 'none') {
+                    cb.checked = selectAllCb.checked;
+                }
+            });
+            updateSummaryText();
+        };
+
+        optionCbs.forEach(cb => {
+            cb.onchange = () => updateSummaryText();
+        });
+    };
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.checkboxes-dropdown').forEach(d => d.style.display = 'none');
+    });
+
+    // Report Generation Engine with Corrosion Rel Date and PDC Editing
+    document.getElementById('holding-generate-btn').addEventListener('click', () => {
+        const getSelectedValues = (field) => {
+            const wrapper = document.querySelector(`.custom-multiselect[data-field="${field}"]`);
+            if (!wrapper) return [];
+            return Array.from(wrapper.querySelectorAll('.option-item input[type="checkbox"]:checked'))
+                        .map(cb => cb.value);
+        };
+
+        const filterCriteria = {
+            railway: getSelectedValues('railway'),
+            coachType: getSelectedValues('coachType'),
+            category: getSelectedValues('category'),
+            suspension: getSelectedValues('suspension'),
+            vehicleType: getSelectedValues('vehicleType'),
+            repairType: getSelectedValues('repairType'),
+            location: getSelectedValues('location'),
+            division: getSelectedValues('division')
+        };
+
+        const filtered = cachedCoaches.filter(coach => {
+            if (coach.physicalOutDate) return false; // Active workshop coaches only
+
+            return (filterCriteria.railway.length === 0 || filterCriteria.railway.includes(coach.railway)) &&
+                   (filterCriteria.coachType.length === 0 || filterCriteria.coachType.includes(coach.coachType)) &&
+                   (filterCriteria.category.length === 0 || filterCriteria.category.includes(coach.category)) &&
+                   (filterCriteria.suspension.length === 0 || filterCriteria.suspension.includes(coach.suspension)) &&
+                   (filterCriteria.vehicleType.length === 0 || filterCriteria.vehicleType.includes(coach.vehicleType)) &&
+                   (filterCriteria.repairType.length === 0 || filterCriteria.repairType.includes(coach.repairType)) &&
+                   (filterCriteria.location.length === 0 || filterCriteria.location.includes(coach.location)) &&
+                   (filterCriteria.division.length === 0 || filterCriteria.division.includes(coach.division));
+        });
+
+        // Summary Bar Computation
+        const summaryBar = document.getElementById('holding-summary-bar');
+        const totalHolding = filtered.length;
+        const icfAcCount = filtered.filter(c => (c.category || '') === 'ICF AC').length;
+        const icfNacCount = filtered.filter(c => (c.category || '') === 'ICF NAC').length;
+        const lhbAcCount = filtered.filter(c => (c.category || '') === 'LHB AC').length;
+        const lhbNacCount = filtered.filter(c => (c.category || '') === 'LHB NAC').length;
+        const vbCount = filtered.filter(c => (c.category || '') === 'VB').length;
+
+        summaryBar.innerHTML = `
+            <div>Total Holding: ${totalHolding}</div>
+            <div>ICF AC: ${icfAcCount}</div>
+            <div>ICF NAC: ${icfNacCount}</div>
+            <div>LHB AC: ${lhbAcCount}</div>
+            <div>LHB NAC: ${lhbNacCount}</div>
+            <div>VB: ${vbCount}</div>
+        `;
+        summaryBar.classList.remove('hidden');
+
+        // Table Construction with Edit Controls for Corrosion Rel Date & PDC
+        const tbody = document.querySelector('#holding-table tbody');
+        tbody.innerHTML = '';
+
+        // Sort coaches by Detention Days from Highest to Lowest.
+        filtered.sort((a, b) => {
+            const dtnA = Number(calculateDetentionDays(a.yardInDate));
+            const dtnB = Number(calculateDetentionDays(b.yardInDate));
+            return dtnB - dtnA;
+        });
+
+        filtered.forEach(coach => {
+            const dtn = calculateDetentionDays(coach.yardInDate);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${coach.coachNumber}</strong></td>
+                <td>${coach.railway || ''}</td>
+                <td>${coach.division || ''}</td>
+                <td>${coach.coachType || ''}</td>
+                <td>${coach.category || ''}</td>
+                <td>${coach.suspension || ''}</td>
+                <td>${coach.vehicleType || ''}</td>
+                <td>${coach.repairType || ''}</td>
+                <td>${coach.location || ''}</td>
+                <td>${formatDateToDMY(coach.yardInDate)}</td>
+                <td><span style="${dtn > 30 ? 'color:red; font-weight:bold;' : ''}">${dtn}</span></td>
+                <td>
+                    <input type="date" value="${coach.corrosionRelDate || ''}" class="table-date-input"
+                           id="holding-corrosion-${coach.coachNumber}"
+                           ${coach.outturnDate || coach.trafficFitDate || currentUserRole === 'viewer' ? 'disabled' : ''}>
+                </td>
+                <td>
+                    <input type="date" value="${coach.outturnDate || coach.pdc || ''}" class="table-date-input"
+                           id="holding-pdc-${coach.coachNumber}"
+                           title="${coach.outturnDate ? 'NTXR Date' : 'PDC Date'}"
+                           ${coach.outturnDate || coach.trafficFitDate || currentUserRole === 'viewer' ? 'disabled' : ''}>
+                </td>
+                <td>
+                    <button class="btn btn-green save-holding-dates-btn" data-coach="${coach.coachNumber}" style="padding:4px 8px; font-size:12px;" ${currentUserRole === 'viewer' ? 'disabled' : ''}>Save Dates</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Add Event Listener to Save Buttons
+        document.querySelectorAll('.save-holding-dates-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (currentUserRole !== 'admin') {
+                    alert('View-only access. Admin login is required to modify dates.');
+                    return;
+                }
+                const coachNo = e.target.dataset.coach;
+                const corrosionInput = document.getElementById(`holding-corrosion-${coachNo}`);
+                const pdcInput = document.getElementById(`holding-pdc-${coachNo}`);
+
+                // NTXR Fit or Traffic Fit locks both dates in Activity 7.
+                if (corrosionInput.disabled || pdcInput.disabled) {
+                    alert(`Corrosion Rel Date and PDC / NTXR Date are locked for Coach ${coachNo} after NTXR/Traffic Fit.`);
+                    return;
+                }
+
+                const newCorrosionDate = corrosionInput.value;
+                const newPdc = pdcInput.value;
+
+                try {
+                    const docRef = doc(db, "coaches", coachNo);
+                    await updateDoc(docRef, {
+                        corrosionRelDate: newCorrosionDate || '',
+                        pdc: newPdc || ''
+                    });
+
+                    // Update cached memory data
+                    const coachInCache = cachedCoaches.find(c => c.coachNumber === coachNo);
+                    if (coachInCache) {
+                        coachInCache.corrosionRelDate = newCorrosionDate;
+                        coachInCache.pdc = newPdc;
+                    }
+
+                    alert(`Dates updated successfully for Coach ${coachNo}!`);
+                } catch (err) {
+                    console.error("Error updating dates from holding report:", err);
+                    alert(`Failed to update dates: ${err.message}`);
+                }
+            });
+        });
+
+        document.getElementById('holding-table').classList.remove('hidden');
+    });
+
+    // Activity 8: Monthly Target
+    // Financial Year is April to March. The displayed FY is determined from
+    // the current date every time Monthly Target is opened.
+    const monthlyTargetMonthNames = [
+        'April', 'May', 'June', 'July', 'August', 'September',
+        'October', 'November', 'December', 'January', 'February', 'March'
+    ];
+
+    const getCurrentFinancialYearStart = () => {
+        const now = new Date();
+        return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    };
+
+    const getFinancialYearRows = () => {
+        const fyStart = getCurrentFinancialYearStart();
+        return monthlyTargetMonthNames.map((month, index) => ({
+            month,
+            year: index < 9 ? fyStart : fyStart + 1,
+            monthNo: index < 9 ? index + 4 : index - 8
+        }));
+    };
+
+    const buildMonthlyTargetRows = async () => {
+        const tbody = document.querySelector('#monthly-target-table tbody');
+        tbody.innerHTML = '';
+
+        let savedTargets = {};
+        try {
+            const snap = await getDocs(collection(db, 'monthlyTargets'));
+            snap.forEach(docSnap => { savedTargets[docSnap.id] = docSnap.data(); });
+        } catch (err) {
+            console.error('Error loading monthly targets:', err);
+        }
+
+        const fyRows = getFinancialYearRows();
+        const fyStart = getCurrentFinancialYearStart();
+
+        // Keep a useful year range in the dropdown while the displayed rows
+        // themselves always follow the current Financial Year.
+        const yearOptionsFor = (selectedYear) => {
+            const years = Array.from({ length: 11 }, (_, i) => fyStart + i);
+            return years.map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`).join('');
+        };
+
+        fyRows.forEach((period, index) => {
+            const docId = `${period.year}-${String(period.monthNo).padStart(2, '0')}`;
+            const saved = savedTargets[docId] || {};
+            const selectedMonth = saved.month || period.month;
+            const selectedYear = Number(saved.year || period.year);
+
+            const monthOptions = monthlyTargetMonthNames
+                .map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`)
+                .join('');
+
+            const tr = document.createElement('tr');
+            tr.dataset.row = index + 1;
+            tr.dataset.defaultDocId = docId;
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><select class="monthly-target-field" data-field="month">${monthOptions}</select></td>
+                <td><select class="monthly-target-field" data-field="year">${yearOptionsFor(selectedYear)}</select></td>
+                <td><input type="text" inputmode="numeric" class="monthly-target-field wdays-input"
+                           data-field="wDays" value="${saved.wDays ?? ''}" placeholder="Enter"></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="icfAc" value="${saved.icfAc ?? ''}"></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="icfNac" value="${saved.icfNac ?? ''}"></td>
+                <td><input type="number" class="target-total" data-field="icfTot" readonly></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="lhbAc" value="${saved.lhbAc ?? ''}"></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="lhbNac" value="${saved.lhbNac ?? ''}"></td>
+                <td><input type="number" class="target-total" data-field="lhbTot" readonly></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="nmghsPoh" value="${saved.nmghsPoh ?? ''}"></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="mlr" value="${saved.mlr ?? ''}"></td>
+                <td><input type="number" min="0" step="1" class="monthly-target-field target-input" data-field="vb" value="${saved.vb ?? ''}"></td>
+                <td><input type="number" class="target-total" data-field="grandTot" readonly></td>
+            `;
+            tbody.appendChild(tr);
+            updateMonthlyTargetTotals(tr);
+        });
+
+        // Final row: column-wise totals for all numeric target columns.
+        const totalRow = document.createElement('tr');
+        totalRow.className = 'monthly-target-column-total';
+        totalRow.innerHTML = `
+            <td colspan="4"><strong>TOTAL</strong></td>
+            <td><input type="number" data-field="total-icfAc" readonly></td>
+            <td><input type="number" data-field="total-icfNac" readonly></td>
+            <td><input type="number" data-field="total-icfTot" readonly></td>
+            <td><input type="number" data-field="total-lhbAc" readonly></td>
+            <td><input type="number" data-field="total-lhbNac" readonly></td>
+            <td><input type="number" data-field="total-lhbTot" readonly></td>
+            <td><input type="number" data-field="total-nmghsPoh" readonly></td>
+            <td><input type="number" data-field="total-mlr" readonly></td>
+            <td><input type="number" data-field="total-vb" readonly></td>
+            <td><input type="number" data-field="total-grandTot" readonly></td>
+        `;
+        tbody.appendChild(totalRow);
+
+        document.querySelectorAll('#monthly-target-table .monthly-target-field').forEach(el => {
+            el.addEventListener('input', e => {
+                updateMonthlyTargetTotals(e.target.closest('tr'));
+                updateMonthlyTargetColumnTotals();
+            });
+            el.addEventListener('change', e => {
+                updateMonthlyTargetTotals(e.target.closest('tr'));
+                updateMonthlyTargetColumnTotals();
+            });
+        });
+
+        updateMonthlyTargetColumnTotals();
+        applyMonthlyTargetPermissions();
+    };
+
+    const numValue = (row, field) => {
+        const value = parseFloat(row.querySelector(`[data-field="${field}"]`)?.value);
+        return Number.isFinite(value) ? value : 0;
+    };
+
+    const updateMonthlyTargetTotals = (row) => {
+        if (!row || row.classList.contains('monthly-target-column-total')) return;
+        const icfTot = numValue(row, 'icfAc') + numValue(row, 'icfNac');
+        const lhbTot = numValue(row, 'lhbAc') + numValue(row, 'lhbNac');
+        const grandTot = icfTot + lhbTot + numValue(row, 'nmghsPoh') + numValue(row, 'mlr') + numValue(row, 'vb');
+        row.querySelector('[data-field="icfTot"]').value = icfTot;
+        row.querySelector('[data-field="lhbTot"]').value = lhbTot;
+        row.querySelector('[data-field="grandTot"]').value = grandTot;
+    };
+
+    const updateMonthlyTargetColumnTotals = () => {
+        const rows = Array.from(document.querySelectorAll('#monthly-target-table tbody tr:not(.monthly-target-column-total)'));
+        const fields = ['icfAc', 'icfNac', 'icfTot', 'lhbAc', 'lhbNac', 'lhbTot', 'nmghsPoh', 'mlr', 'vb', 'grandTot'];
+        fields.forEach(field => {
+            const total = rows.reduce((sum, row) => sum + numValue(row, field), 0);
+            const input = document.querySelector(`#monthly-target-table [data-field="total-${field}"]`);
+            if (input) input.value = total;
+        });
+    };
+
+    const applyMonthlyTargetPermissions = () => {
+        const isAdmin = currentUserRole === 'admin';
+        document.querySelectorAll('#monthly-target-table .monthly-target-field').forEach(el => el.disabled = !isAdmin);
+        const saveBtn = document.getElementById('monthly-target-save-btn');
+        if (saveBtn) saveBtn.disabled = !isAdmin;
+    };
+
+    document.getElementById('monthly-target-save-btn').addEventListener('click', async () => {
+        if (currentUserRole !== 'admin') {
+            alert('View-only access. Admin login is required to save Monthly Target.');
+            return;
+        }
+
+        const rows = Array.from(document.querySelectorAll('#monthly-target-table tbody tr:not(.monthly-target-column-total)'));
+        try {
+            for (const row of rows) {
+                updateMonthlyTargetTotals(row);
+                const month = row.querySelector('[data-field="month"]').value;
+                const year = Number(row.querySelector('[data-field="year"]').value);
+                const monthNo = monthlyTargetMonthNames.indexOf(month) + 4;
+                const actualMonthNo = monthNo > 12 ? monthNo - 12 : monthNo;
+                const docId = `${year}-${String(actualMonthNo).padStart(2, '0')}`;
+
+                await setDoc(doc(db, 'monthlyTargets', docId), {
+                    month, year,
+                    wDays: row.querySelector('[data-field="wDays"]')?.value.trim() || '',
+                    icfAc: numValue(row, 'icfAc'),
+                    icfNac: numValue(row, 'icfNac'),
+                    icfTot: numValue(row, 'icfTot'),
+                    lhbAc: numValue(row, 'lhbAc'),
+                    lhbNac: numValue(row, 'lhbNac'),
+                    lhbTot: numValue(row, 'lhbTot'),
+                    nmghsPoh: numValue(row, 'nmghsPoh'),
+                    mlr: numValue(row, 'mlr'),
+                    vb: numValue(row, 'vb'),
+                    grandTot: numValue(row, 'grandTot')
+                });
+            }
+            updateMonthlyTargetColumnTotals();
+            alert('Monthly Target saved successfully!');
+        } catch (err) {
+            console.error('Error saving Monthly Target:', err);
+            alert('Failed to save Monthly Target: ' + err.message + '\n\nIf the message says "Missing or insufficient permissions", update the Firestore Security Rules to allow Admin access to the monthlyTargets collection.');
+        }
+    });
+
+    // Monthly Target is loaded for both Admin and User.
+    // User receives read-only controls; Admin receives editable controls.
+    // showActivity() calls buildMonthlyTargetRows() whenever this activity is opened.
+</script>
+
+</body>
+</html>
